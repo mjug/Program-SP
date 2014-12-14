@@ -1,0 +1,370 @@
+#include <iostream>
+#include <cstdlib>
+#include <cstring>
+#include <string>
+
+using namespace std;
+
+#include "red_polje.h"
+//#include "red_pokazivac.h"
+
+klijent *po;
+
+int generatorCetvorki(que *Q){
+	int n;
+	cout << "Koliko cetvorki zelite generirati? ";
+	cin >> n;
+	po = new klijent [n];
+	for(int i=0; i<n; i++){
+		po[i].ai = rand()%500+10;
+		po[i].bi = rand()%800+80;
+		po[i].ci = rand()%5+1;
+		po[i].di = rand()%5+1;
+	}
+	cout << "Uspjesno je generirano " << n << " cetvorki!"<<endl;
+ cout<<	"....................................."<<endl;
+	for(int i=0; i<n; i++)
+		cout << i+1 << ". cetvorka: " << po[i].ai << ", " << po[i].bi << ", " << po[i].ci << ", " << po[i].di << endl;
+cout<<	"....................................."<<endl;
+	return n;
+}
+
+void ispisCetvorki(int a,int b,int c,int d){
+	cout << "Dolazak nakon prethodnog: " << a << " s";
+	cout << "Vrijeme posluzivanja: " << b << " s";
+	cout << "Priroritet klijenta: ";
+	switch(c){
+		case 1: cout << "1.VIP"<<endl; break;
+		case 2: cout << "2.Osoba s invaliditetom"<<endl; break;
+		case 3: cout << "3.Trudnica"<<endl; break;
+		case 4: cout << "4.Umirovljenik"<<endl; break;
+		case 5: cout << "5.Ostali"<<endl; break;
+	}
+	cout << "Usluge: ";
+	switch(d){
+		case 1: cout << "1.Predaja/preuzimanje posiljke"<<endl; break;
+		case 2: cout << "2.Placanje racuna"<<endl; break;
+		case 3: cout << "3.Uplata lutrije"<<endl; break;
+		case 4: cout << "4.Western Union"<<endl; break;
+		case 5: cout << "5.EvoTV"<<endl; break;
+	}
+}
+
+void sort(que *Q){
+	que *PQ = InitQ(PQ);
+	que *PQ2 = InitQ(PQ2);
+	klijent m;
+	while(!IsEmptyQ(Q)){
+		m = FrontQ(Q);
+		DeQueueQ(Q);
+		EnQueueQ(m, PQ);
+	}
+	for(int i=1; i<=5; i++){
+		while(!IsEmptyQ(PQ)){
+			m = FrontQ(PQ);
+			DeQueueQ(PQ);
+			if(m.ci == i) EnQueueQ(m, Q);
+			else EnQueueQ(m, PQ2);
+		}
+	
+		while(!IsEmptyQ(PQ2)){
+			m = FrontQ(PQ2);
+			DeQueueQ(PQ2);
+			EnQueueQ(m, PQ);
+		}
+	}
+}
+
+void unos(que *Q, int brN){
+	bool trud, opet;
+	cout << "Unos 5 klijenata za svaku generiranu kombinaciju"<<endl;
+	for(int i=0; i<brN; i++){
+		cout << i+1 << ". kombinacija"<<endl;
+		ispisCetvorki(po[i].ai, po[i].bi, po[i].ci, po[i].di);
+		trud = false;
+		for(int j=0; j<5; j++){
+			cout << j+1 << ". klijent"<<endl;
+			klijent m;
+			if(po[i].ci==3){
+				trud = true;
+ 				cout << "Klijent je trudnica sto znaci da je spol zenski!"<<endl;
+ 				m.spol='Z';
+ 			}
+			cout << "Ime: ";
+			cin.ignore();
+			getline(cin, m.ime);
+			cout << "Prezime: ";
+			getline(cin, m.prezime);
+			cout << "Datum rodenja"<<endl;
+			do{
+				cout << "Dan: ";
+				cin >> m.dan;
+				if(m.dan<1 || m.dan>31) cout << "Raspon dana od 1 do 31!"<<endl;
+			}while(m.dan<1 || m.dan>31);
+			do{
+				cout << "Mjesec: ";
+				cin >> m.mj;
+				if(m.mj<1 || m.mj>12) cout << "Raspon mj od 1 do 12!"<<endl;
+			}while(m.mj<1 || m.mj>12);
+			do{
+				opet = false;
+				cout << "God: ";
+				cin >> m.god;
+				if(m.god<1900 || m.god>2014){
+					cout << "Godina u rasponu od 1900 do 2014!"<<endl;
+					opet = true;
+				}
+				if(po[i].ci==4 && ((2014 - m.god)<40)){
+					cout << "Umirovljenici moraju imati barem 40god!"<<endl;
+					opet = true;
+				}
+			}while(opet);
+			if(!trud){
+				do{
+					cout << "Spol (M/Z): ";
+					cin >> m.spol;
+					if(toupper(m.spol)!='M' && toupper(m.spol)!='Z') cout << "Spol mora biti M ili Z!"<<endl;
+				}while(toupper(m.spol)!='M' && toupper(m.spol)!='Z');
+			}
+			m.ai = po[i].ai;
+			m.bi = po[i].bi;
+			m.ci = po[i].ci;
+			m.di = po[i].di;
+			ispisCetvorki(m.ai, m.bi, m.ci, m.di);
+			EnQueueQ(m, Q);
+			if(m.ci<5) sort(Q);
+			cout << "Osoba je dodana u red!\n";
+		}
+	}
+}
+
+bool hor(klijent m){
+	if(((m.dan>=22) && m.mj==12) || ((m.dan<=20) && m.mj==1)) return true; //Jarac
+	else return false;
+}
+
+void ispisKlijenta(klijent m){
+	cout << "Ime: " << m.ime << endl;
+	cout << "Prezime: " << m.prezime << endl;
+	cout << "Datum rodenja: " << m.dan << "." << m.mj << "." << m.god << endl;
+	cout << "Spol: " << m.spol << endl;
+	ispisCetvorki(m.ai, m.bi, m.ci, m.di);
+	cout<< "....................................."<<endl;
+}
+
+void ispisJarac(que *Q){
+     cout<<endl;
+	cout << "Ispis svih klijenta koji su horoskopskog znaka Jarac,a mladji od 40 godina i cekaju na uplatu lutrije"<<endl;
+	cout<< "....................................."<<endl;
+	que *PQ = InitQ(Q);
+	klijent m;
+	bool jarac;
+	while(!IsEmptyQ(Q)){
+		m = FrontQ(Q);
+		DeQueueQ(Q);
+		EnQueueQ(m, PQ);
+		jarac = hor(m);
+		if(m.di==3 && jarac && ((2014 - m.god)<40))
+			ispisKlijenta(m);
+	}
+	
+	while(!IsEmptyQ(PQ)){
+		m = FrontQ(PQ);
+		DeQueueQ(PQ);
+		EnQueueQ(m, Q);
+	}
+}
+
+void ispisRed(que *Q){
+	if(IsEmptyQ(Q)) return;
+	klijent m = FrontQ(Q);
+	ispisKlijenta(m);
+	DeQueueQ(Q);
+	ispisRed(Q);
+	EnQueueQ(m, Q);
+}
+
+void vrati(que *Q){
+	if(IsEmptyQ(Q)) return;
+	klijent m = FrontQ(Q);
+	DeQueueQ(Q);
+	vrati(Q);
+	EnQueueQ(m, Q);
+}
+
+void izlazTrudnice(que *Q){
+	if(IsEmptyQ(Q)) return;
+	klijent m;
+	bool pop;
+	do{
+		pop = false;
+		m = FrontQ(Q);
+		if(m.ci==3 && m.di==5){
+			pop = true;
+			DeQueueQ(Q);
+		}
+		if(IsEmptyQ(Q)) break;
+	}while(pop);
+	if(!IsEmptyQ(Q)) DeQueueQ(Q);
+	izlazTrudnice(Q);
+	if(!pop) EnQueueQ(m, Q);
+}
+
+void rasporedi(que *Q, que *Q1, que *Q2, que *Q3, que *Q4, que *Q5, que *FQ){
+	if(IsEmptyQ(Q)) return;
+	klijent m = FrontQ(Q);
+	DeQueueQ(Q);
+	if(m.ci==4) EnQueueQ(m, FQ);
+	else {
+		switch(m.di){
+			case 1: EnQueueQ(m, Q1); break;
+			case 2: EnQueueQ(m, Q2); break;
+			case 3: EnQueueQ(m, Q3); break;
+			case 4: EnQueueQ(m, Q4); break;
+			case 5: EnQueueQ(m, Q5); break;
+		}
+	}
+	rasporedi(Q, Q1, Q2, Q3, Q4, Q5, FQ);
+}
+
+void brzi(que *FQ, que *Qn){
+	static int br=0;
+	if(IsEmptyQ(Qn) || br==2) return;
+	klijent m = FrontQ(Qn);
+	DeQueueQ(Qn);
+	EnQueueQ(m, FQ);
+	br++;
+	brzi(FQ, Qn);
+	br=0;
+}
+
+int main (){
+	que *Q = InitQ(Q);
+	que *Q1 = InitQ(Q1);
+	que *Q2 = InitQ(Q2);
+	que *Q3 = InitQ(Q3);
+	que *Q4 = InitQ(Q4);
+	que *Q5 = InitQ(Q5);
+	que *FQ = InitQ(FQ);
+	
+	int izbor, brN=0;
+	do{
+		cout << "....................................."<<endl;
+		cout << "=IZBORNIK="<<endl;
+		cout << "....................................."<<endl;
+		cout << "1. Generiranje cetvorki"<<endl;
+		cout << "2. Dodavanje klijenta poste u red"<<endl;
+		cout << "3. Odlazak trudnica koje su se dosle raspitati o Evotv usluzi"<<endl;
+		cout << "4. Brzi salter"<<endl;
+		cout << "5. Stanje u redu"<<endl;
+		cout << "9. Izlaz"<<endl;
+		cout << "....................................."<<endl;
+		cout << "Vas izbor: ";
+		cin >> izbor;
+		cout<<endl;
+		switch(izbor){
+			case 1:
+				system("cls");
+				brN = generatorCetvorki(Q);
+				break;
+			
+			case 2:
+				system("cls");
+				if(!brN){
+					cout << "Prvo morate generirati cetvorke!"<<endl;
+					break;
+				}
+				unos(Q, brN);
+				ispisJarac(Q);
+				break;
+			
+			case 3:
+				system("cls");
+				izlazTrudnice(Q);
+				vrati(Q);
+				if(IsEmptyQ(Q)){
+					cout << "Red je prazan!"<<endl;
+					break;
+				}
+				cout << "Stanje u redu"<<endl;
+				cout << "....................................."<<endl;
+				ispisRed(Q);
+				vrati(Q);
+				break;
+				
+			case 4:
+				system("cls");
+				rasporedi(Q, Q1, Q2, Q3, Q4, Q5, FQ);
+				sort(Q5);
+				brzi(FQ, Q5);
+				sort(Q4);
+				brzi(FQ, Q4);
+				sort(Q3);
+				brzi(FQ, Q3);
+				sort(Q2);
+				brzi(FQ, Q2);
+				sort(Q1);
+				brzi(FQ, Q1);
+				sort(FQ);
+				cout << "Brzi salter je kreiran!"<<endl;
+				cout << "....................................."<<endl;
+				cout << "Stanje u redovima"<<endl;
+				cout <<"....................................."<<endl;
+				if(!IsEmptyQ(FQ)){
+					cout << "Brzi red\n";
+					cout << "....................................."<<endl;
+					ispisRed(FQ);
+					cout << "....................................."<<endl;
+				}
+				if(!IsEmptyQ(Q1)){
+					cout << "1. red - Predaja/Preuzimanje posiljke"<<endl;
+					cout << "....................................."<<endl;
+					ispisRed(Q1);
+				cout<<	"....................................."<<endl;
+				}
+				if(!IsEmptyQ(Q2)){
+					cout << "2. red-Placanje racuna"<<endl;
+					cout << "....................................."<<endl;
+					ispisRed(Q2);
+					cout << "....................................."<<endl;
+				}
+				if(!IsEmptyQ(Q3)){
+					cout << "3. red-Uplata lutrije"<<endl;
+					cout << "....................................."<<endl;
+					ispisRed(Q3);
+					cout << "....................................."<<endl;
+				}
+				if(!IsEmptyQ(Q4)){
+					cout << "4. red-Western Union"<<endl;
+					cout << "....................................."<<endl;
+					ispisRed(Q4);
+					cout << "....................................."<<endl;
+				}
+				if(!IsEmptyQ(Q5)){
+					cout << "5. red-EvoTV"<<endl;
+					cout << "....................................."<<endl;
+					ispisRed(Q5);
+					cout << "....................................."<<endl;
+				}
+				break;
+				
+			case 5:
+				system("cls");
+				if(IsEmptyQ(Q)){
+					cout << "Red je prazan!"<<endl;
+					break;
+				}
+				cout << "Stanje.."<<endl;
+				cout << "....................................."<<endl;
+				ispisRed(Q);
+				vrati(Q);
+				break;
+
+			case 9: cout << "Izlaz"<<endl; break;
+			default: cout << "Krivi unos!"<<endl;
+		}
+	}while(izbor!=9);
+	
+	system("pause");
+	return 0;
+}
