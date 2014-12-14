@@ -1,0 +1,50 @@
+#include<iostream>
+using namespace std;
+
+struct klijent{
+	string ime, prezime;
+	char spol;
+	int dan, mj, god;
+	int ai, bi, ci, di;
+};
+
+struct que{
+	klijent klijenti[1000];
+	int front, rear;
+};
+int AddOne(int n){
+	return ((n+1)%1000);
+}
+
+que *InitQ(que *Q){
+	Q = new que;
+	Q->front = 0;
+	Q->rear = 999;
+	return Q;
+}
+
+bool IsEmptyQ(que *Q){
+	if(AddOne(Q->front) == Q->rear) return true;
+	else return false;
+}
+
+klijent FrontQ(que *Q){
+	if(IsEmptyQ(Q)) cout << "Prazan red!"<<endl;
+	else return Q->klijenti[Q->front];
+}
+
+void EnQueueQ(klijent m, que *Q){
+	int n;
+	if(Q->rear==999) n=0;
+	else n = Q->rear+1;
+	Q->klijenti[n] = m;
+	Q->rear = n;
+}
+
+void DeQueueQ(que *Q){
+	if(IsEmptyQ(Q)) cout << "Prazan red!"<<endl;
+	else {
+		if(Q->front==999) Q->front=0;
+		else Q->front++;
+	}
+}
